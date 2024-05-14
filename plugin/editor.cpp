@@ -68,6 +68,7 @@ struct YsfxEditor::Impl {
     std::unique_ptr<juce::TextButton> m_btnRecentFiles;
     std::unique_ptr<juce::TextButton> m_btnEditCode;
     std::unique_ptr<juce::TextButton> m_btnLoadPreset;
+    std::unique_ptr<juce::TextButton> m_btnReloadScript;
     std::unique_ptr<juce::TextButton> m_btnSwitchEditor;
     std::unique_ptr<juce::Label> m_lblFilePath;
     std::unique_ptr<juce::Label> m_lblIO;
@@ -347,6 +348,8 @@ void YsfxEditor::Impl::createUI()
     m_self->addAndMakeVisible(*m_btnLoadFile);
     m_btnRecentFiles.reset(new juce::TextButton(TRANS("Recent")));
     m_self->addAndMakeVisible(*m_btnRecentFiles);
+    m_btnReloadScript.reset(new juce::TextButton(TRANS("Reload")));
+    m_self->addAndMakeVisible(*m_btnReloadScript);
     m_btnEditCode.reset(new juce::TextButton(TRANS("Edit")));
     m_self->addAndMakeVisible(*m_btnEditCode);
     m_btnLoadPreset.reset(new juce::TextButton(TRANS("Preset")));
@@ -384,6 +387,14 @@ void YsfxEditor::Impl::connectUI()
     m_btnSwitchEditor->onClick = [this]() { switchEditor(m_btnSwitchEditor->getToggleState()); };
     m_btnEditCode->onClick = [this]() { openCodeEditor(); };
     m_btnLoadPreset->onClick = [this]() { popupPresets(); };
+    m_btnReloadScript->onClick = [this]() {
+        YsfxInfo::Ptr info = m_info;
+        ysfx_t *fx = info->effect.get();
+        if (!fx) return;
+
+        juce::File file{juce::CharPointer_UTF8{ysfx_get_file_path(fx)}};
+        loadFile(file);
+    };
 
     m_ideView->onFileSaved = [this](const juce::File &file) { loadFile(file); };
     m_ideView->onReloadRequested = [this](const juce::File &file) { loadFile(file); };
@@ -418,6 +429,8 @@ void YsfxEditor::Impl::relayoutUI()
     m_btnLoadFile->setBounds(temp.removeFromLeft(80));
     temp.removeFromLeft(10);
     m_btnRecentFiles->setBounds(temp.removeFromLeft(80));
+    temp.removeFromLeft(10);
+    m_btnReloadScript->setBounds(temp.removeFromLeft(60));
     temp.removeFromLeft(10);
     m_btnSwitchEditor->setBounds(temp.removeFromRight(80));
     temp.removeFromRight(10);
